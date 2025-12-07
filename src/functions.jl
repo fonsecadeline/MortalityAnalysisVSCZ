@@ -103,24 +103,57 @@ function modify_df!(df::DataFrame)
 	select!(df, Not(:infection_rank))
 end
 
+# weekly_entries.jl
+function create_weekly_entries(entries::Vector{Date}, subgroup_id::Int64,
+		these_mondays::Vector{Date})
+	subgroup = deepcopy(dfs[subgroup_id]) # créée une vraie copie, pour les tests. subgroup est modifié, il faut le redéfinir à chaque exécution.
+	weekly_entries = Dict(entry => DataFrame(vaccinated=Bool[],
+																					 entry=Date[],
+																					 exit=Date[],
+																					 death=Date[])
+												for entry in entries)
+	when_what_where_dict = Dict{Date, Dict{Date, Vector{Int}}}()
+	for this_monday in mondays
+		if this_monday in these_mondays
+			weekly_entry = weekly_entries[this_monday]
+			# Pour les vaccinés
+			vaccinated_count = process_vaccinated!(subgroup,
+																						 weekly_entry,
+																						 this_monday)
+			# Pour les premiers non-vaccinés
+			process_first_unvaccinated!(subgroup,
+																	weekly_entry,
+																	this_monday,
+																	vaccinated_count,
+																	when_what_where_dict)
+		end
+		# Pour les non-vaccinés de remplacement
+		replace_unvaccinated!(this_monday,
+													subgroup,
+													weekly_entries,
+													when_what_where_dict)
+	end
+	return weekly_entries
+	# TODO return when_what_where_dict et autre chose?
+end
+
 function process_vaccinated!(
 		subgroup::DataFrame,
 		weekly_entry::DataFrame,
-		entry::Date) # AbstractDict si weekly_entries est un `OrderedDict`, mais ce n'est pas le cas
+		this_monday::Date) # AbstractDict si weekly_entries est un `OrderedDict`, mais ce n'est pas le cas
 	# Repérer dans `subgroup` les vaccinés de la `weekly_entry` en cours, puis les mettre dans weekly_entries[entry], puis les marquer comme non-disponibles dans `subgroup`.
 	for row in eachrow(subgroup)
-		if row.week_of_dose1 == entry
+		if row.week_of_dose1 == this_monday
 			push!(weekly_entry, (
 																		vaccinated = true,
-																		entry = entry,
-																		exit = entry + Week(53),
+																		entry = this_monday,
+																		exit = this_monday + Week(53),
 																		death = row.week_of_death
 																		))
 			row.available = unavailable
 		end
 	end
-	# # Performance: supprimer dans `subgroup` toutes les lignes où `available == unavailable`?
-	return nrow(weekly_entries[entry])  # renvoie le nombre de vaccinés ajoutés à entry
+	return nrow(weekly_entry) # renvoie le nombre de vaccinés ajoutés à entry
 end
 
 function process_first_unvaccinated!(
@@ -141,10 +174,10 @@ function process_first_unvaccinated!(
 											 row.available < entry,
 											 eachrow(subgroup))
 		if !isempty(eligible) && length(eligible) < vaccinated_count
-			@warn "$this_monday: Moins de non-vaccinés que de vaccinés pour entry = $entry"
+			@error "$this_monday: Moins de non-vaccinés que de vaccinés pour entry = $entry"
 		end
 		if isempty(eligible)
-			@warn "$this_monday: Aucun non-vacciné éligible pour entry = $entry"
+			@error "$this_monday: Aucun non-vacciné éligible pour entry = $entry"
 		end
 		# numéros de lignes, qui sont sélectionnées:
 		selected = sample(eligible, min(vaccinated_count, length(eligible)), replace=false)
@@ -229,9 +262,9 @@ function replace_unvaccinated!(
 	for (_what, _where) in inner_dict
 		if length(eligible) < length(_where)
 			if isempty(eligible)
-				@warn "$this_monday: Replacement impossible in $(_what)! `eligible` is empty!"
+				@error "$this_monday: Replacement impossible in $(_what)! `eligible` is empty!"
 			else
-				@warn "$this_monday: Replacement impossible in $(_what)! `eligible` is lesser than length(_where)!"
+				@error "$this_monday: Replacement impossible in $(_what)! `eligible` is lesser than length(_where)!"
 			end
 		end
 		if length(eligible) >= length(_where)
