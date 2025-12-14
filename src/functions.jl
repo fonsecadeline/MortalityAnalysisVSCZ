@@ -104,71 +104,73 @@ function modify_df!(df::DataFrame)
 end
 
 # select.jl
-function select_weekly_entries(ENTRIES, APPROXIMATE_SELECTION, subgroup_id; maxk=53)
+function select_subgroups(ENTRIES, APPROXIMATE_SELECTION, group_id; maxk=53)
 	tail = ENTRIES[54:131]
-	weekly_entries = nothing
-	# ok = APPROXIMATE_SELECTION[subgroup_id]
-	these_mondays = vcat(ENTRIES[1:APPROXIMATE_SELECTION[subgroup_id]], tail)
+	subgroups = nothing
+	# ok = APPROXIMATE_SELECTION[group_id]
+	these_mondays = vcat(ENTRIES[1:APPROXIMATE_SELECTION[group_id]], tail) # remplacer par un Set ?
 	try
 		# Random.seed!(0)
-		weekly_entries =
-		create_weekly_entries(ENTRIES,
-													subgroup_id,
+		subgroups =
+		create_subgroups(ENTRIES,
+													group_id,
 													these_mondays,
 													MONDAYS,
 													dfs)
-		# @info "subgroup_id = $subgroup_id\nWe are bellow at $(ok)!"
-		if APPROXIMATE_SELECTION[subgroup_id] < maxk
-			next_approximate_selection = APPROXIMATE_SELECTION[subgroup_id] + 1
+		# @info "group_id = $group_id\nWe are bellow at $(ok)!"
+		if APPROXIMATE_SELECTION[group_id] < maxk
+			next_approximate_selection = APPROXIMATE_SELECTION[group_id] + 1
 			for k in next_approximate_selection:maxk
 				these_mondays = vcat(ENTRIES[1:k], tail)
 				try
 					# Random.seed!(0)
-					weekly_entries =
-					create_weekly_entries(ENTRIES,
-																subgroup_id,
+					subgroups =
+					create_subgroups(ENTRIES,
+																group_id,
 																these_mondays,
 																MONDAYS,
 																dfs)
 				catch
-					@info "subgroup_id = $subgroup_id\nweekly_entries selected from below: [1:$k, 54:131]"
+					@info "group_id = $group_id\nsubgroups selected from below: [1:$k, 54:131]"
 					break
 				end
 			end
-		else # APPROXIMATE_SELECTION[subgroup_id] == maxk
-			@info "subgroup_id = $subgroup_id\nweekly_entries total selection: [1:131]"
-			return weekly_entries
+		else # APPROXIMATE_SELECTION[group_id] == maxk
+			@info "group_id = $group_id\nsubgroups total selection: [1:131]"
+			return subgroups
 		end
 	catch
-		# @info "subgroup_id = $subgroup_id\nWe are above at $(ok)!"
-		previous_approximate_selection = APPROXIMATE_SELECTION[subgroup_id] - 1
+		# @info "group_id = $group_id\nWe are above at $(ok)!"
+		previous_approximate_selection = APPROXIMATE_SELECTION[group_id] - 1
 		for k in previous_approximate_selection:-1:0
 				these_mondays = vcat(ENTRIES[1:k], tail)
 				try
 					Random.seed!(0)
-					weekly_entries =
-					create_weekly_entries(ENTRIES,
-																subgroup_id,
+					subgroups =
+					create_subgroups(ENTRIES,
+																group_id,
 																these_mondays,
 																MONDAYS,
 																dfs)
-					@info "subgroup_id = $subgroup_id\nweekly_entries selected from above: [1:$k, 54:131]"
-					return weekly_entries
+					@info "group_id = $group_id\nsubgroups selected from above: [1:$k, 54:131]"
+					return subgroups
 				catch
 				end
 		end
 	end
-	return weekly_entries
+	return subgroups
 end
 
-function create_weekly_entries(ENTRIES::Vector{Date},
-		subgroup_id::Int64,
+function create_subgroups(ENTRIES::Vector{Date},
+		group_id::Int,
 		these_mondays::Vector{Date},
 		MONDAYS::Vector{Date},
-		dfs::Dict{Int64, DataFrame})
-	# subgroup = deepcopy(dfs[subgroup_id]) # créée une vraie copie, pour les tests. subgroup est modifié, il faut le redéfinir à chaque exécution.
-	subgroup = dfs[subgroup_id] # pas une vraie copie.
-	weekly_entries = Dict(entry => DataFrame(vaccinated=Bool[],
+		dfs::Dict{Int, DataFrame})
+	# TEST: créée une vraie copie, pour les tests. group est modifié, il faut le redéfinir à chaque exécution.
+	group = deepcopy(dfs[group_id])
+	# TODO: pas une vraie copie.
+	# group = dfs[group_id]
+	subgroups = Dict(entry => DataFrame(vaccinated=Bool[],
 																					 entry=Date[],
 																					 exit=Date[],
 																					 death=Date[])
@@ -176,36 +178,36 @@ function create_weekly_entries(ENTRIES::Vector{Date},
 	when_what_where_dict = Dict{Date, Dict{Date, Vector{Int}}}()
 	for this_monday in MONDAYS
 		if this_monday in these_mondays
-			weekly_entry = weekly_entries[this_monday]
+			subgroup = subgroups[this_monday]
 			# Pour les vaccinés
-			vaccinated_count = process_vaccinated!(subgroup,
-																						 weekly_entry,
+			vaccinated_count = process_vaccinated!(group,
+																						 subgroup,
 																						 this_monday)
 			# Pour les premiers non-vaccinés
-			process_first_unvaccinated!(subgroup,
-																	weekly_entry,
+			process_first_unvaccinated!(group,
+																	subgroup,
 																	this_monday,
 																	vaccinated_count,
 																	when_what_where_dict)
 		end
 		# Pour les non-vaccinés de remplacement
 		replace_unvaccinated!(this_monday,
-													subgroup,
-													weekly_entries,
+													group,
+													subgroups,
 													when_what_where_dict)
 	end
-	filter!(kv -> nrow(kv[2]) > 0, weekly_entries)
-	return weekly_entries
+	filter!(kv -> nrow(kv[2]) > 0, subgroups)
+	return subgroups
 end
 
 function process_vaccinated!(
+		group::DataFrame,
 		subgroup::DataFrame,
-		weekly_entry::DataFrame,
-		this_monday::Date) # AbstractDict si weekly_entries est un `OrderedDict`, mais ce n'est pas le cas
-	# Repérer dans `subgroup` les vaccinés de la `weekly_entry` en cours, puis les mettre dans weekly_entries[entry], puis les marquer comme non-disponibles dans `subgroup`.
-	for row in eachrow(subgroup)
+		this_monday::Date)
+	# INFO: Repérer dans `group` les vaccinés du `subgroup` en cours, puis les mettre dans subgroups[entry], puis les marquer comme non-disponibles dans `group`.
+	for row in eachrow(group)
 		if row.week_of_dose1 == this_monday
-			push!(weekly_entry, (
+			push!(subgroup, (
 																		vaccinated = true,
 																		entry = this_monday,
 																		exit = this_monday + Week(53),
@@ -214,13 +216,14 @@ function process_vaccinated!(
 			row.available = UNAVAILABLE
 		end
 	end
-	return nrow(weekly_entry) # renvoie le nombre de vaccinés ajoutés à entry
+	# INFO:renvoie le nombre de vaccinés ajoutés à entry
+	return nrow(subgroup)
 end
 
 function process_first_unvaccinated!(
+		group::DataFrame,
 		subgroup::DataFrame,
-		weekly_entry::DataFrame,
-		entry::Date,
+		this_monday::Date,
 		vaccinated_count::Int,
 		when_what_where_dict::Dict{Date, Dict{Date, Vector{Int}}}
 		)
@@ -228,57 +231,57 @@ function process_first_unvaccinated!(
 		eligible = findall(row ->
 											 # sont éligibles:
 											 # les vivants:
-											 entry <= row.week_of_death &&
+											 this_monday <= row.week_of_death &&
 											 # non-vaccinés:
-											 entry < row.week_of_dose1 &&
-											 # qui ne sont pas encore dans un autre weekly_entry:
-											 row.available < entry,
-											 eachrow(subgroup))
+											 this_monday < row.week_of_dose1 &&
+											 # qui ne sont pas encore dans un autre subgroup:
+											 row.available < this_monday,
+											 eachrow(group))
 		if !isempty(eligible) && length(eligible) < vaccinated_count
-			error("$this_monday: Moins de non-vaccinés que de vaccinés pour entry = $entry")
+			error("$this_monday: Moins de non-vaccinés que de vaccinés pour entry = $this_monday")
 		end
 		if isempty(eligible)
-			error("$this_monday: Aucun non-vacciné éligible pour entry = $entry")
+			error("$this_monday: Aucun non-vacciné éligible pour entry = $this_monday")
 		end
 		# numéros de lignes, qui sont sélectionnées:
 		selected = sample(eligible, min(vaccinated_count, length(eligible)), replace=false)
 		for i in selected
-			# Chaque ligne sélectionnée dans subgroup:
-			row = subgroup[i, :]
-			# un non-vaccinés sort soit à la fin de la weekly_entry, soit au moment de sa vaccination.
-			exit = min(row.week_of_dose1, entry + Week(53))
-			push!(weekly_entry, (
+			# INFO: Chaque ligne sélectionnée dans group:
+			row = group[i, :]
+			# INFO: un non-vaccinés sort soit à la fin de la subgroup, soit au moment de sa vaccination.
+			exit = min(row.week_of_dose1, this_monday + Week(53))
+			push!(subgroup, (
 													 vaccinated = false,
-													 entry = entry,
+													 entry = this_monday,
 													 exit = exit,
 													 death = row.week_of_death
 													 ))
-			# Un non-vaccinés redevient disponible soit lorsqu'il est vaccinés, soit lorsqu'il sort de la weekly_entry. Attention, il pourrait être "disponible", après sa mort, d'où l'importance de vérifier si les non-vaccinés ne sont pas mort, avant d'intégrer ou de réintégrer une weekly_entry!
-			subgroup[i, :available] = exit + Week(1)
+			# INFO: Un non-vaccinés redevient disponible soit lorsqu'il est vaccinés, soit lorsqu'il sort de la subgroup. Attention, il pourrait être "disponible", après sa mort, d'où l'importance de vérifier si les non-vaccinés ne sont pas mort, avant d'intégrer ou de réintégrer une subgroup!
+			group[i, :available] = exit + Week(1)
 		end
 	end
-	# Il faut ensuite noter dans `when_what_where_dict` les non-vaccinés qui devront être remplacés, et quand.
+	# INFO: Il faut ensuite noter dans `when_what_where_dict` les non-vaccinés qui devront être remplacés, et quand.
 	# Itérateur sur les non-vaccinés à remplacer (when, what, where)
 	when_what_where_iter = (
 													(row.exit, # Semaine de la vaccination du non-vacciné
-													 entry, # Identifiant (une date) du weekly_entry
+													 this_monday, # Identifiant (une date) du subgroup
 													 i) # Numéro de ligne du non-vaccinés à remplacer.
-													for (i, row) in enumerate(eachrow(weekly_entry))
-													# On ne retient que les individus dont la durée (exit - entry) est strictement inférieure à 53 semaines, c’est-à-dire ceux qui se vaccinent avant la fin de la période d’observation.
+													for (i, row) in enumerate(eachrow(subgroup))
+													# INFO: On ne retient que les individus dont la durée (exit - entry) est strictement inférieure à 53 semaines, c’est-à-dire ceux qui se vaccinent avant la fin de la période d’observation.
 													if (row.exit - row.entry) < Week(53)
 													)
-	# Écriture directe dans when_what_where_dict
+	# INFO: Écriture directe dans when_what_where_dict
 	# Ce dictionnaire imbriqué est de type Dict{Date, Dict{Date, Vector{Int}}}
 	# _when: quand faire le remplacement: au moment de la vaccination d'un non-vacciné,
-	# _what: dans quel weekly_entry faire le remplacement,
-	# _where: dans le weekly_entry, quel est le numéro de ligne du non-vacciné à remplacer.
+	# _what: dans quel subgroup faire le remplacement,
+	# _where: dans le subgroup, quel est le numéro de ligne du non-vacciné à remplacer.
 	for (_when, _what, _where) in when_what_where_iter
-		# Dans `when_what_where_dict`: récupère (ou crée si absent) le dictionnaire interne associé à la date de vaccination du non-vacciné (_when).
+		# INFO: Dans `when_what_where_dict`: récupère (ou crée si absent) le dictionnaire interne associé à la date de vaccination du non-vacciné (_when).
 		@chain begin
-			# Chercher dans le dictionnaire `when_what_where_dict` la clé `_when`. Si elle existe, retourner la valeur associée (un objet de type `Dict{Date, Vector{Int}}`); si elle n'existe pas, créer une paire `_when => valeur` dont la valeur est un objet vide de type `Dict{Date, Vector{Int}}`, puis retourner cet objet vide. Dans les deux cas, appelons cet objet `inner_dict`.
+			# INFO: Chercher dans le dictionnaire `when_what_where_dict` la clé `_when`. Si elle existe, retourner la valeur associée (un objet de type `Dict{Date, Vector{Int}}`); si elle n'existe pas, créer une paire `_when => valeur` dont la valeur est un objet vide de type `Dict{Date, Vector{Int}}`, puis retourner cet objet vide. Dans les deux cas, appelons cet objet `inner_dict`.
 			when_what_where_dict
 			get!(_, _when, Dict{Date, Vector{Int}}())
-			# Chercher dans le dictionnaire `inner_dict` la clé `_what`. Si elle existe, retourner la valeur associée (un objet de type Vector{Int}); si elle n'existe pas, créer une paire `clé => valeur` dont la valeur est un objet vide de type `Vector{Int}`, puis retourner cet objet vide. Dans les deux cas, appelons cet objet `inner_vector` (les lignes à changer, c'est-à-dire les non-vaccinés à remplacer, dans les `weekly_entries`).
+			# INFO: Chercher dans le dictionnaire `inner_dict` la clé `_what`. Si elle existe, retourner la valeur associée (un objet de type Vector{Int}); si elle n'existe pas, créer une paire `clé => valeur` dont la valeur est un objet vide de type `Vector{Int}`, puis retourner cet objet vide. Dans les deux cas, appelons cet objet `inner_vector` (les lignes à changer, c'est-à-dire les non-vaccinés à remplacer, dans les `subgroups`).
 			get!(_, _what, Int[])
 			# ajouter au vecteur `inner_vector` la valeur `_where`.
 			append!(_, _where)
@@ -288,8 +291,8 @@ end
 
 function replace_unvaccinated!(
 		this_monday::Date,
-		subgroup::DataFrame,
-		weekly_entries::Dict{Date, DataFrame},
+		group::DataFrame,
+		subgroups::Dict{Date, DataFrame},
 		when_what_where_dict::Dict{Date, Dict{Date, Vector{Int}}}
 		)
 	# rien à faire si aucun remplacement planifié pour ce this_monday
@@ -316,9 +319,9 @@ function replace_unvaccinated!(
 										 _when <= row.week_of_death &&
 										 # non-vaccinés:
 										 _when < row.week_of_dose1 &&
-										 # qui ne sont pas encore dans un autre weekly_entry:
+										 # qui ne sont pas encore dans un autre subgroup:
 										 row.available < _when,
-										 eachrow(subgroup)
+										 eachrow(group)
 										 )
 	for (_what, _where) in inner_dict
 		if length(eligible) < length(_where)
@@ -331,19 +334,19 @@ function replace_unvaccinated!(
 		if length(eligible) >= length(_where)
 			selected = sample(eligible, length(_where), replace=false)
 			for i in selected
-				row = subgroup[i, :]
+				row = group[i, :]
 				exit = min(row.week_of_dose1, _what + Week(53))
-				subgroup[i, :available] = exit + Week(1)
+				group[i, :available] = exit + Week(1)
 			end
-			weekly_entry = weekly_entries[_what]
+			subgroup = subgroups[_what]
 			for (k, i) in enumerate(_where)
 				s = selected[k]
-				weekly_entry_end = _what + Week(53)
-				vaccination_date = subgroup[s, :week_of_dose1]
-				exit = min(weekly_entry_end, vaccination_date)
-				weekly_entry.exit[i]  = exit
-				weekly_entry.death[i] = subgroup[s, :week_of_death]
-				if vaccination_date <= weekly_entry_end # Même chose que dans la fonction `process_first_unvaccinated`
+				subgroup_end = _what + Week(53)
+				vaccination_date = group[s, :week_of_dose1]
+				exit = min(subgroup_end, vaccination_date)
+				subgroup.exit[i]  = exit
+				subgroup.death[i] = group[s, :week_of_death]
+				if vaccination_date <= subgroup_end # Même chose que dans la fonction `process_first_unvaccinated`
 					@chain begin
 						# dans when_what_where_dict (un dictionnaire)
 						when_what_where_dict
