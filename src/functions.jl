@@ -366,4 +366,26 @@ function replace_unvaccinated!(
 	return nothing
 end
 
+# adjust.jl
+function adjust_dcci_dates!(df::DataFrame)
+    for i in 1:size(df, 1)
+        dcci_vec = df.DCCI[i]
+        length(dcci_vec) == 1 && continue
+        if dcci_vec[1][1] == VERY_FIRST_ENTRY
+            # première paire : +6 jours
+            dcci_vec[1] = (dcci_vec[1][1] + Day(6), dcci_vec[1][2])
+            # autres paires : +3 jours
+            for j in 2:length(dcci_vec)
+                dcci_vec[j] = (dcci_vec[j][1] + Day(3), dcci_vec[j][2])
+            end
+        else
+            # toutes les paires : +3 jours
+            for j in 1:length(dcci_vec)
+                dcci_vec[j] = (dcci_vec[j][1] + Day(3), dcci_vec[j][2])
+            end
+        end
+        df.DCCI[i] = dcci_vec
+    end
+end
+
 @info "Loading completed"

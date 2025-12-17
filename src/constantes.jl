@@ -30,6 +30,7 @@ const MY_ENGLISH_HEADER = [
 										 "week_of_dose7",
 										 "week_of_death"
 										 ]
+const VERY_FIRST_ENTRY = Date(2020, 12, 21)
 const UNVACCINATED = Date("10000-01-01")
 const STILL_ALIVE = Date("10000-01-01")
 const AVAILABLE = Date("-10000-01-01")
