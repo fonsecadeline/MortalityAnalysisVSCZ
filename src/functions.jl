@@ -366,7 +366,7 @@ function replace_unvaccinated!(
 	return nothing
 end
 
-# adjust.jl
+# dcci_adjust.jl
 function adjust_dcci_dates!(df::DataFrame)
     for i in 1:size(df, 1)
         dcci_vec = df.DCCI[i]
@@ -386,6 +386,44 @@ function adjust_dcci_dates!(df::DataFrame)
         end
         df.DCCI[i] = dcci_vec
     end
+end
+
+# dcci_dates_substraction.jl
+function dcci_dates_substraction!(df::DataFrame)
+	for i in 1:size(df, 1)
+		dcci_vec = df.DCCI[i]
+		n = length(dcci_vec)
+		if n == 1
+			# une seule paire : mettre Day(1)
+			dcci_vec[1] = (Day(1), dcci_vec[1][2])
+		else
+			# plusieurs paires
+			for j in 1:n
+				current_date = dcci_vec[j][1]
+				if j < n
+					# soustraire la date de la prochaine paire
+					next_date = dcci_vec[j + 1][1]
+					dcci_vec[j] = (next_date - current_date, dcci_vec[j][2])
+				else
+					if df.entry[i] == VERY_FIRST_ENTRY
+						# dernière paire : soustraire à min(exit, death + 3)
+						exit_adj = df.exit[i]
+						death_adj = df.death[i] + Day(3)
+						end_date = min(exit_adj, death_adj)
+						dcci_vec[j] = (end_date - current_date, dcci_vec[j][2])
+					else
+						# dernière paire : soustraire à min(exit - 3, death + 3)
+						exit_adj = df.exit[i] - Day(3)
+						death_adj = df.death[i] + Day(3)
+						end_date = min(exit_adj, death_adj)
+						dcci_vec[j] = (end_date - current_date, dcci_vec[j][2])
+					end
+				end
+			end
+		end
+		# réaffecter le vecteur modifié
+		df.DCCI[i] = dcci_vec
+	end
 end
 
 @info "Loading completed"
