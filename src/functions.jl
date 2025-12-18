@@ -366,64 +366,39 @@ function replace_unvaccinated!(
 	return nothing
 end
 
-# dcci_adjust.jl
-function adjust_dcci_dates!(df::DataFrame)
-    for i in 1:size(df, 1)
-        dcci_vec = df.DCCI[i]
-        length(dcci_vec) == 1 && continue
-        if dcci_vec[1][1] == VERY_FIRST_ENTRY
-            # première paire : +6 jours
-            dcci_vec[1] = (dcci_vec[1][1] + Day(6), dcci_vec[1][2])
-            # autres paires : +3 jours
-            for j in 2:length(dcci_vec)
-                dcci_vec[j] = (dcci_vec[j][1] + Day(3), dcci_vec[j][2])
-            end
-        else
-            # toutes les paires : +3 jours
-            for j in 1:length(dcci_vec)
-                dcci_vec[j] = (dcci_vec[j][1] + Day(3), dcci_vec[j][2])
-            end
-        end
-        df.DCCI[i] = dcci_vec
-    end
-end
-
-# dcci_dates_substraction.jl
-function dcci_dates_substraction!(df::DataFrame)
-	for i in 1:size(df, 1)
-		dcci_vec = df.DCCI[i]
-		n = length(dcci_vec)
+# dcci_treatment.jl
+function dcci_treatment!(df::DataFrame)
+	newcol = Vector{Vector{Tuple{Int, Int}}}(undef, nrow(df))
+	@inbounds for i in 1:nrow(df)
+		old = df.DCCI[i]
+		n = length(old)
+		out = Vector{Tuple{Int, Int}}(undef, n)
 		if n == 1
-			# une seule paire : mettre Day(1)
-			dcci_vec[1] = (Day(1), dcci_vec[1][2])
+			out[1] = (1, old[1][2])
 		else
-			# plusieurs paires
+			first_is_special = (old[1][1] == VERY_FIRST_ENTRY)
 			for j in 1:n
-				current_date = dcci_vec[j][1]
+				(original_date, dcci) = old[j]
+				# ajustement de la date courante
+				adjustment = (j == 1 && first_is_special) ? Day(6) : Day(3)
+				current_date = original_date + adjustment
 				if j < n
-					# soustraire la date de la prochaine paire
-					next_date = dcci_vec[j + 1][1]
-					dcci_vec[j] = (next_date - current_date, dcci_vec[j][2])
+					next_date = old[j+1][1] + Day(3)
+					out[j] = (Dates.value(next_date - current_date), dcci)
 				else
-					if df.entry[i] == VERY_FIRST_ENTRY
-						# dernière paire : soustraire à min(exit, death + 3)
-						exit_adj = df.exit[i]
-						death_adj = df.death[i] + Day(3)
-						end_date = min(exit_adj, death_adj)
-						dcci_vec[j] = (end_date - current_date, dcci_vec[j][2])
+					if first_is_special
+						end_date = min(df.exit[i], df.death[i] + Day(3))
 					else
-						# dernière paire : soustraire à min(exit - 3, death + 3)
-						exit_adj = df.exit[i] - Day(3)
-						death_adj = df.death[i] + Day(3)
-						end_date = min(exit_adj, death_adj)
-						dcci_vec[j] = (end_date - current_date, dcci_vec[j][2])
+						end_date = min(df.exit[i] - Day(3), df.death[i] + Day(3))
 					end
+					out[j] = (Dates.value(end_date - current_date), dcci)
 				end
 			end
 		end
-		# réaffecter le vecteur modifié
-		df.DCCI[i] = dcci_vec
+		newcol[i] = out
 	end
+	df.DCCI = newcol
+	return df
 end
 
 @info "Loading completed"
