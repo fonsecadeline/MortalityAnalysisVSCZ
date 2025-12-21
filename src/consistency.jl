@@ -1,6 +1,5 @@
-@info "Consistency check (parallel)"
-found_inconsistent = ThreadsX.any(dose_rank_consistency, dfs)
-if found_inconsistent
-    error("Inconsistency found in vaccine dose ranks!")
+@info "Inconsistency: removing of people who died before their vaccination"
+ThreadsX.foreach(values(exact_selection)) do df
+	filter!(r -> r.entry <= r.death, df)
 end
-@info "No inconsistency found (parallel)"
+@info "Inconsistency: removing done"

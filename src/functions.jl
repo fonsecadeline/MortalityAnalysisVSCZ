@@ -204,6 +204,17 @@ function create_subgroups(ENTRIES::Vector{Date},
 	return subgroups
 end
 
+# BUG: il y a un vacciné qui est entré dans un groupe après être mort en 1960!
+# julia> @chain begin
+#        exact_selection[11960]
+#        filter(r -> isempty(r.DCCI), _)
+#        end
+# 1×5 DataFrame
+#  Row │ vaccinated  entry       exit        death       DCCI                  
+#      │ Bool        Date        Date        Date        Array…                
+# ─────┼───────────────────────────────────────────────────────────────────────
+#    1 │       true  2021-03-08  2022-03-14  2020-12-28  Tuple{Int64, Int64}[]
+#    vacciné après sa mort? bug dans les données originales?
 function process_vaccinated!(
 		group::DataFrame,
 		subgroup::DataFrame,
@@ -366,7 +377,7 @@ function replace_unvaccinated!(
 	return nothing
 end
 
-# dcci_treatment.jl
+# dcci.jl
 function dcci_treatment!(df::DataFrame)
 	newcol = Vector{Vector{Tuple{Int, Int}}}(undef, nrow(df))
 	@inbounds for i in 1:nrow(df)
