@@ -5,10 +5,10 @@ dfs = Dict(
     for df in dfs
 )
 
-ThreadsX.foreach(subdf -> begin
-									 select!(subdf.second, [:week_of_dose1, :week_of_death])
-									 foreach(col -> replace!(col, missing => Date(10000,1,1)), eachcol(subdf.second))
-									 insertcols!(subdf.second, 1, :available => Date(-10000,1,1))
+ThreadsX.foreach(df -> begin
+									 select!(df.second, [:week_of_dose1, :week_of_death, :DCCI])
+									 foreach(col -> replace!(col, missing => Date(10000,1,1)), eachcol(df.second))
+									 insertcols!(df.second, 1, :available => Date(-10000,1,1))
 								 end, dfs)
 
 @info "Indexing completed"

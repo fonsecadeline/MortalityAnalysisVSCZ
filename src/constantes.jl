@@ -15,7 +15,8 @@ const MY_CZECH_HEADER = [
 									 "Datum_Pata_davka",
 									 "Datum_Sesta_davka",
 									 "Datum_Sedma_davka",
-									 "DatumUmrtiLPZ"
+									 "DatumUmrtiLPZ",
+									 "DCCI",
 									 ]
 const MY_ENGLISH_HEADER = [
 										 "infection_rank",
@@ -28,7 +29,8 @@ const MY_ENGLISH_HEADER = [
 										 "week_of_dose5",
 										 "week_of_dose6",
 										 "week_of_dose7",
-										 "week_of_death"
+										 "week_of_death",
+										 "DCCI",
 										 ]
 const VERY_FIRST_ENTRY = Date(2020, 12, 21)
 const UNVACCINATED = Date("10000-01-01")
