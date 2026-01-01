@@ -2,12 +2,9 @@
 
 # Processing
 exact_selection = Dict(
-    ThreadsX.map(
-        k -> begin
+    ThreadsX.map(k -> begin
             k => vcat(values(exact_selection[k])...)
-        end,
-        keys(exact_selection)
-    )
+        end, keys(exact_selection)),
 )
 
 @info "Concatenation completed"

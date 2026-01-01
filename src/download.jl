@@ -6,13 +6,13 @@ const CZECH_DATA_CSV_URL = "https://data.mzcr.cz/data/distribuce/402/Otevrena-da
 
 # Functions
 function DownloadCheck(file::AbstractString, URL::AbstractString)
-	if !isfile(file)
-		@info "File missing, downloading..."
-		Downloads.download(URL, file)
-		@info "Download completed"
-	else
-		@info "File already present"
-	end
+    if !isfile(file)
+        @info "File missing, downloading..."
+        Downloads.download(URL, file)
+        @info "Download completed"
+    else
+        @info "File already present"
+    end
 end
 
 # Processing
