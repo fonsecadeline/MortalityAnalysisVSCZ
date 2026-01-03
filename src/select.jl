@@ -126,14 +126,14 @@ function create_subgroups(
 end
 
 function process_vaccinated!(group::DataFrame, subgroup::DataFrame, this_monday::Date)::Int
-    # INFO: Repérer dans `group` les vaccinés du `subgroup` en cours, puis les mettre dans subgroups[entry], puis les marquer comme non-disponibles dans `group`.
+    # INFO: Repérer dans `group` les vaccinés du `subgroup` en cours, puis les mettre dans subgroups[entry].
     for row in eachrow(group)
         if row.week_of_dose1 == this_monday
             vaccinated = true
             entry = this_monday
-            exit = this_monday + Week(53) # INFO: 53 semaines en tout
+            exit = this_monday + Week(53) # INFO: un peu plus qu'un an, 53 semaines en tout
             death = row.week_of_death
-            DCCI = [(row.DCCI, this_monday)] # TEST: remplacement par la valeur de DCCI
+						DCCI = [(row.DCCI, this_monday)] # INFO: un vecteur d'une paire (tuple)
             push!(
                 subgroup,
                 (
@@ -144,7 +144,6 @@ function process_vaccinated!(group::DataFrame, subgroup::DataFrame, this_monday:
                     DCCI = DCCI,
                 ),
             )
-            row.available = UNAVAILABLE
         end
     end
     # INFO:renvoie le nombre de vaccinés ajoutés à entry
@@ -167,59 +166,59 @@ function process_first_unvaccinated!(
                 # non-vaccinés:
                 this_monday < row.week_of_dose1 && # INFO: doivent être non-vaccinés la semaine courante
                 # qui ne sont pas encore dans un autre subgroup:
-								row.available <= this_monday, # INFO: était auparavant `<`. Pourtant, plus bas: `group[i, :available] = exit + Week(1)`, ce qui signifie ces non-vaccinés sont disponibles un peu plus tôt, à partir de la semaine 54 et non 55. Mais est-ce que cela pose problème pour la toute première semaine, où la vaccination commence le dimanche 27 décembre 2020? En principe, non, car cela fait un décalage de 6 + 1.24 jours seulement. Il faut peut-être éclaircir le code au sujet des décalages des jours, car une année fait 52 semaines + 1.24 jours, et les vaccinations sont réputées commencer en milieu de semaines ou en fin en ce qui concerne la toute première semaine.
-								eachrow(group),
+                row.available <= this_monday, # INFO: était auparavant `<`. Pourtant, plus bas: `group[i, :available] = exit + Week(1)`, ce qui signifie ces non-vaccinés sont disponibles un peu plus tôt, à partir de la semaine 54 et non 55. Mais est-ce que cela pose problème pour la toute première semaine, où la vaccination commence le dimanche 27 décembre 2020? En principe, non, car cela fait un décalage de 6 + 1.24 jours seulement. Il faut peut-être éclaircir le code au sujet des décalages des jours, car une année fait 52 semaines + 1.24 jours, et les vaccinations sont réputées commencer en milieu de semaines ou en fin en ce qui concerne la toute première semaine.
+            eachrow(group),
         )
         if length(eligible) < vaccinated_count
             error(
                 "$this_monday: Moins de non-vaccinés que de vaccinés pour entry = $this_monday",
             )
-						# INFO: cette erreur permet à la fonction `select_subgroups` de sélectionner le bon nombre de subgroups.
-        end
-        # numéros de lignes, qui sont sélectionnées:
-				# INFO: sélectionner, parmi les éligibles, le même nombre de non-vaccinés que de vaccinés.
-        selected =
-            sample(eligible, vaccinated_count, replace = false)
-        for i in selected
-            # INFO: Chaque ligne sélectionnée dans group:
-            row = group[i, :]
-            # INFO: un non-vaccinés sort soit à la fin de la subgroup, soit au moment de sa vaccination.
-            vaccinated = false
-            entry = this_monday
-            exit = min(row.week_of_dose1, this_monday + Week(53))
-            death = row.week_of_death
-            DCCI = [(row.DCCI, this_monday)] # INFO: l'indice de comorbidités
-            push!(
-                subgroup,
-                (
-                    vaccinated = vaccinated, # vaccinated = false
-                    entry = entry,
-                    exit = exit,
-                    death = death,
-                    DCCI = DCCI,
-                ),
-            )
-            # INFO: Un non-vacciné redevient disponible soit lorsqu'il est vacciné, soit lorsqu'il sort du subgroup. Attention, il pourrait être "disponible", après sa mort, d'où l'importance de vérifier si les non-vaccinés ne sont pas mort, avant d'intégrer ou de réintégrer une subgroup!
-            group[i, :available] = exit + Week(1)
+            # INFO: cette erreur permet à la fonction `select_subgroups` de sélectionner le bon nombre de subgroups.
+        else
+            # numéros de lignes, qui sont sélectionnées:
+            # INFO: sélectionner, parmi les éligibles, le même nombre de non-vaccinés que de vaccinés.
+            selected = sample(eligible, vaccinated_count, replace = false)
+            for i in selected
+                # INFO: Chaque ligne sélectionnée dans group:
+                row = group[i, :]
+                # INFO: un non-vaccinés sort soit à la fin de la subgroup, soit au moment de sa vaccination.
+                vaccinated = false
+                entry = this_monday
+                exit = min(row.week_of_dose1, this_monday + Week(53))
+                death = row.week_of_death
+                DCCI = [(row.DCCI, this_monday)] # INFO: l'indice de comorbidités
+                push!(
+                    subgroup,
+                    (
+                        vaccinated = vaccinated, # vaccinated = false
+                        entry = entry,
+                        exit = exit,
+                        death = death,
+                        DCCI = DCCI,
+                    ),
+                )
+                # INFO: Un non-vacciné redevient disponible soit lorsqu'il est vacciné, soit lorsqu'il sort du subgroup. Attention, il pourrait être "disponible", après sa mort, d'où l'importance de vérifier si les non-vaccinés ne sont pas mort, avant d'intégrer ou de réintégrer une subgroup!
+                group[i, :available] = exit + Week(1)
+            end
         end
     end
     # INFO: Il faut ensuite noter dans l'agenda `when_what_where_dict` les non-vaccinés qui devront être remplacés, et quand.
     # Itérateur sur les non-vaccinés à remplacer (when, what, where)
+    # INFO: cet itérateur sélectionne le numéro de ligne, `this_monday` et `exit` de chaque non-vacciné à remplacer dans subroup, mais les réarange dans un autre sens: d'abord la date `exit` (car c'est à ce moment-là qu'il faudra le remplacer), puis `this_monday` (car c'est aussi l'identifiant du subgroup dans lequel le remplacement devra être fait) et le numéro de ligne (car c'est la ligne du non-vacciné à remplacer).
     when_what_where_iter = (
         (
-            row.exit, # Semaine de la vaccination du non-vacciné
-            this_monday, # Identifiant (une date) du subgroup
-            i,
-        ) # Numéro de ligne du non-vaccinés à remplacer.
-        for (i, row) in enumerate(eachrow(subgroup))
-        # INFO: On ne retient que les individus dont la durée (exit - entry) est strictement inférieure à 53 semaines, c’est-à-dire ceux qui se vaccinent avant la fin de la période d’observation.
+            row.exit, # Semaine de vaccination du non-vacciné: quand il faut s'occuper du remplacement
+            this_monday, # Identifiant (une date) du subgroup: dans quel subgroup a lieu le remplacement
+            i, # à quelle ligne
+        ) for (i, row) in enumerate(eachrow(subgroup))
+        # INFO: On ne retient que les individus dont la durée (exit - entry) est strictement inférieure à 53 semaines, c’est-à-dire ceux qui se vaccinent avant la fin de la période d’observation. NOTA: cela exclut automatiqument les vaccinés, car dans leur cas, strictement: `(row.exit - row.entry) == Week(53)`
         if (row.exit - row.entry) < Week(53)
     )
-    # INFO: Écriture directe dans when_what_where_dict
-    # Ce dictionnaire imbriqué est de type Dict{Date, Dict{Date, Vector{Int}}}
-    # _when: quand faire le remplacement: au moment de la vaccination d'un non-vacciné,
-    # _what: dans quel subgroup faire le remplacement,
-    # _where: dans le subgroup, quel est le numéro de ligne du non-vacciné à remplacer.
+    # INFO: ajout de when_what_where_iter dans when_what_where_dict
+    # Cet agenda when_what_where_dict est de type Dict{Date, Dict{Date, Vector{Int}}} où :
+    # _when: (première date) quand faire le remplacement: au moment de la vaccination d'un non-vacciné,
+    # _what: (deuxième date) dans quel subgroup faire le remplacement,
+    # _where: (Vector{Int}) dans le subgroup, quels sont les numéros de ligne des non-vaccinés à remplacer.
     for (_when, _what, _where) in when_what_where_iter
         # INFO: Dans `when_what_where_dict`: récupère (ou crée si absent) le dictionnaire interne associé à la date de vaccination du non-vacciné (_when).
         @chain begin
@@ -230,9 +229,10 @@ function process_first_unvaccinated!(
             get!(_, _what, Int[])
             # ajouter au vecteur `inner_vector` la valeur `_where`.
             append!(_, _where)
+            # `when_what_where_dict` a été mis à jour avec les nouvelles valeurs de `when_what_where_iter`.
         end
     end
-		return nothing
+    return nothing
 end
 
 function replace_unvaccinated!(
@@ -247,7 +247,7 @@ function replace_unvaccinated!(
     end
     _when = this_monday
     inner_dict = when_what_where_dict[_when]
-    # Les éligibles doivent être calculés dans chaque fonction `process_first_unvaccinated` et `replace_unvaccinated`.
+    # Les éligibles doivent être calculés de la même manière que dans chaque fonction `process_first_unvaccinated!`.
     eligible = findall(
         row ->
         # Sont éligibles, à la date de remplacement:
@@ -262,12 +262,11 @@ function replace_unvaccinated!(
     for (_what, _where) in inner_dict
         if length(eligible) < length(_where)
             error(
-                "$this_monday: Impossible replacement in $(_what)! `eligible` is lesser than length(_where)!",
+                "$this_monday: Impossible replacement in $(_what)! `eligible` is lesser than `length(_where)`!",
             )
-        end
-        if length(eligible) >= length(_where)
+        else
             selected = sample(eligible, length(_where), replace = false)
-            for i in selected # INFO: `i` is each column of `selected`
+            for i in selected # INFO: `i` is each element of the `selected` vector.
                 row = group[i, :] # INFO: select all columns of line `i` of `group`
                 exit = min(row.week_of_dose1, _what + Week(53))
                 group[i, :available] = exit + Week(1)
@@ -281,7 +280,7 @@ function replace_unvaccinated!(
                 death = group[s, :week_of_death]
                 subgroup.exit[i] = exit
                 subgroup.death[i] = death
-                push!(subgroup.DCCI[i], (group[s, :DCCI], this_monday))  # TEST: remplacement par la valeur de DCCI
+                push!(subgroup.DCCI[i], (group[s, :DCCI], this_monday))
                 if vaccination_date <= subgroup_end # Même chose que dans la fonction `process_first_unvaccinated`
                     @chain begin
                         # dans when_what_where_dict (un dictionnaire)
