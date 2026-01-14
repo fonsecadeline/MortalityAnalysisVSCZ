@@ -14,6 +14,8 @@ end
 
 # Functions
 
+# INFO: Vous avez des fonctions tests sur un petit échantillon de données sur `test/select_test.jl`
+
 # INFO: Attention! Le type des entrées et des sorties de chaque fonction est indiqué lors de leur définition et assez souvent lors de leur appel. Cela permet de renseigner et de vérifier immédiatement les types, mais si des types doivent être changés, l'indication de type doit être changé partout.
 
 # INFO:
