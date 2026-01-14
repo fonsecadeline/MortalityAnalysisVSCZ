@@ -1,3 +1,5 @@
+# INFO: choose your seed just below!
+my_seed = 0
 include("src/project.jl")
 include("src/packages.jl")
 include("src/constants.jl")
@@ -11,6 +13,7 @@ include("src/format.jl")
 include("src/exclude.jl")
 include("src/indexing.jl")
 include("src/cleaning.jl")
+include("src/seed.jl")
 include("src/select.jl")
 include("src/concat.jl")
 include("src/dcci.jl")

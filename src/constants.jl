@@ -1,6 +1,5 @@
 @info "Loading constantes"
 
-Random.seed!(0)
 const CZECH_DATA_CSV = "data/exp_raw/Otevrena-data-NR-26-30-COVID-19-prehled-populace-2024-01.csv"
 const AVAILABLE = Date(-10000, 01, 01)
 const UNAVAILABLE = Date(10000, 01, 01)
