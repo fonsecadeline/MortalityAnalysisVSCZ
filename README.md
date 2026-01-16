@@ -10,6 +10,6 @@ It is authored by sulivanShu.
 To (locally) reproduce this project, do the following:
 
 0. Clone this depot.
-1. Open a Julia console and run scripts/main.jl .
+1. Open a Julia console from the `MortalityAnalysisVSCZ` directory and run `scripts/main.jl`.
 
 This will install all necessary packages and data for you to be able to run the scripts.

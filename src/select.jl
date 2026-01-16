@@ -16,7 +16,7 @@ end
 
 # INFO: Vous avez des fonctions tests sur un petit échantillon de données sur `test/select_test.jl`
 
-# INFO: Attention! Le type des entrées et des sorties de chaque fonction est indiqué lors de leur définition et assez souvent lors de leur appel. Cela permet de renseigner et de vérifier immédiatement les types, mais si des types doivent être changés, l'indication de type doit être changé partout.
+# INFO: Attention! Le type des entrées et des sorties de chaque fonction est indiqué lors de leur définition et assez souvent lors de leur appel. Cela permet de renseigner et de vérifier immédiatement les types, mais si des types doivent être changés, l'indication de type doit être changée partout.
 
 # INFO:
 # La fonction `select_subgroups` sélectionne toutes les semaines de la semaine 54 à la semaine 131, puis tente de sélectionner autant de semaines que possible depuis la semaine 1. Il teste différent nombres de semaines à partir d'un nombre de semaines probablement correct (APPROXIMATE_SELECTION): si le test réussit, il teste une semaine de plus jusqu'à échouer, et retient le dernier nombre de semaines qui a réussi; si le teste échoue, il teste une semaine de moins jusqu'à réussir, et retient le premier nombre de semaines qui réussit. create_subgroups déclenche une erreur s'il n'y a pas assez d'individus dans un sous-groupe, ce qui arrive nécessairement lorsqu'il y a trop de sous-groupes.
