@@ -16,7 +16,7 @@ function find_last_valid(ENTRIES, subgroup_id; maxk = 53)
         vec = vcat(ENTRIES[1:k], tail)
         try
             # weekly_entries =
-            create_weekly_entries(ENTRIES, subgroup_id, vec, MONDAYS, dfs)
+            create_weekly_entries(ENTRIES, subgroup_id, vec, ALL_MONDAYS, dfs)
             ok = k
         catch e
             # Une erreur s'est produite : on arrête immédiatement la boucle
