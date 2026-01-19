@@ -52,7 +52,7 @@ function create_subgroups(
 		these_mondays::Vector{Date};
 		group = init_group(),
 		agenda = init_agenda(),
-	)::Dict{Date,DataFrame}
+		)::Dict{Date,DataFrame}
 	pool = get_pool_from(group_id)
 	for this_monday in ALL_MONDAYS
 		if this_monday in these_mondays
@@ -61,21 +61,21 @@ function create_subgroups(
 																						 pool,
 																						 subgroup,
 																						 this_monday,
-																						)
+																						 )
 			process_first_unvaccinated!(
 																	pool,
 																	subgroup,
 																	this_monday,
 																	vaccinated_count,
 																	agenda,
-																 )
+																	)
 		end
 		replace_unvaccinated!(
 													this_monday,
 													pool,
 													group,
 													agenda,
-												 )
+													)
 	end
 	rm_empty_df_in(group)
 	return group
@@ -111,7 +111,7 @@ function process_first_unvaccinated!(
 		this_monday::Date,
 		vaccinated_count::Int,
 		agenda::Dict{Date,Dict{Date,Vector{Int}}},
-	)::Nothing
+		)::Nothing
 	if vaccinated_count != 0
 		eligible = get_eligible(pool, this_monday)
 		if length(eligible) < vaccinated_count
@@ -133,8 +133,8 @@ function process_first_unvaccinated!(
 							 exit = exit,
 							 death = row.death_week,
 							 DCCI = [(row.DCCI, this_monday)],
-							),
-						 )
+							 ),
+							)
 				# INFO: Un non-vacciné redevient disponible soit lorsqu'il est vacciné, soit lorsqu'il sort du subgroup. Attention, il pourrait être "disponible", après sa mort, d'où l'importance de vérifier si les non-vaccinés ne sont pas mort, avant d'intégrer ou de réintégrer une subgroup!
 				pool[i, :availability_week] = exit + Week(1) # une semaine après l'exit. Vérifier.
 			end
@@ -151,7 +151,7 @@ function process_first_unvaccinated!(
 													) for (i, row) in enumerate(eachrow(subgroup))
 													# INFO: On ne retient que les individus dont la durée (exit - entry) est strictement inférieure à 53 semaines, c’est-à-dire ceux qui se vaccinent avant la fin de la période d’observation. NOTA: cela exclut automatiqument les vaccinés, car dans leur cas, strictement: `(row.exit - row.entry) == Week(53)`
 													if (row.exit - row.entry) < Week(53)
-												 )
+													)
 	# INFO: ajout de when_what_where_iter dans agenda
 	# Cet agenda agenda est de type Dict{Date, Dict{Date, Vector{Int}}} où :
 	# _when: (première date) quand faire le remplacement: au moment de la vaccination d'un non-vacciné,
@@ -178,7 +178,7 @@ function replace_unvaccinated!(
 		pool::DataFrame,
 		group::Dict{Date,DataFrame},
 		agenda::Dict{Date,Dict{Date,Vector{Int}}},
-	)::Nothing
+		)::Nothing
 	# Return nothing if nothing to do in agenda for this_monday
 	if !haskey(agenda, this_monday)
 		return nothing
@@ -186,9 +186,7 @@ function replace_unvaccinated!(
 		eligible = get_eligible(pool, this_monday)
 		for (_what, _where) in agenda[this_monday]
 			if length(eligible) < length(_where)
-				error(
-							"$this_monday: Impossible replacement in $(_what)! `eligible` is lesser than `length(_where)`!",
-						 )
+				error("$this_monday: Impossible replacement in $(_what)! `eligible` is lesser than `length(_where)`!")
 			else
 				selected = sample(eligible, length(_where), replace = false)
 				for i in selected # INFO: `i` is each element of the `selected` vector.
@@ -251,7 +249,7 @@ end
 
 function get_next_first_interval_iterator(
 		group_id::Int
-	)::UnitRange{Int}
+		)::UnitRange{Int}
 	(APPROXIMATE_FIRST_STOPS[group_id] + 1):MAX_FIRST_STOP
 end
 
@@ -263,7 +261,7 @@ end
 
 function get_previous_first_interval_iterator(
 		group_id::Int
-	)::StepRange{Int,Int}
+		)::StepRange{Int,Int}
 	(APPROXIMATE_FIRST_STOPS[group_id] - 1):-1:0
 end
 
@@ -307,7 +305,7 @@ end
 
 function try_these_mondays(
 		next_or_previous::Int
-	)::Vector{Date}
+		)::Vector{Date}
 	these_mondays = vcat(ENTRIES[1:next], TAIL)
 end
 
