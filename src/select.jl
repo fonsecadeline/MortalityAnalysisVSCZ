@@ -14,7 +14,7 @@ const TAIL = ENTRIES[54:131]::Vector{Date}
 
 # Functions
 ## Low level functions
-function init_group(ENTRIES = ENTRIES)::Dict{Date,DataFrame}
+function init_group()::Dict{Date,DataFrame}
 	group = Dict(
 							 entry => DataFrame(
 																	vaccinated = Bool[],
@@ -35,38 +35,38 @@ function init_agenda()::Dict{Date,Dict{Date,Vector{Int}}}
 end
 
 function all_weeks_are_selected(
-		group_id::Int ;
+		group_id::Int
 		)::Bool
 	APPROXIMATE_FIRST_STOPS[group_id] == MAX_FIRST_STOP
 end
 
 function get_these_mondays(
-		group_id::Int ;
+		group_id::Int
 		)::Vector{Date}
 	head = ENTRIES[1:APPROXIMATE_FIRST_STOPS[group_id]]
 	these_mondays = vcat(head, TAIL)
 end
 
 function try_these_mondays(
-		next_or_previous::Int;
+		next_or_previous::Int
 	)::Vector{Date}
 	these_mondays = vcat(ENTRIES[1:next], TAIL)
 end
 
 function get_next_first_interval_iterator(
-		group_id::Int ;
+		group_id::Int
 	)::UnitRange{Int}
 	(APPROXIMATE_FIRST_STOPS[group_id] + 1):MAX_FIRST_STOP
 end
 
 function get_previous_first_interval_iterator(
-		group_id::Int ;
+		group_id::Int
 	)::StepRange{Int,Int}
 	(APPROXIMATE_FIRST_STOPS[group_id] - 1):-1:0
 end
 
 function get_pool_from(
-		group_id::Int;
+		group_id::Int
 		)::DataFrame
 	deepcopy(DFS[group_id]) # INFO: deepcopy pour ne pas détruire dfs en cours de route, et pouvoir lancer le module plusieurs fois sans avoir à recréer dfs. de toute façon on utilise la constante DFS.
 end
@@ -77,7 +77,7 @@ end
 
 ## High level functions
 function select_subgroups(
-		group_id::Int ;
+		group_id::Int;
 		group = init_group(),
 		)::Dict{Date,DataFrame}
 	these_mondays = get_these_mondays(group_id)
