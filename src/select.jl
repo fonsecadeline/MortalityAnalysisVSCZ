@@ -8,9 +8,9 @@ const APPROXIMATE_FIRST_STOPS = approximate_selection::Dict{Int,Int}
 const DFS = dfs::Dict{Int, DataFrame}
 const MAX_FIRST_STOP = 53
 # const GROUP_ID_VEC = @chain DFS keys collect # sort # Int[] # INFO: Production
-GROUP_ID_VEC = @chain DFS keys collect # sort # Int[] # TEST: Production
+# GROUP_ID_VEC = @chain DFS keys collect # sort # Int[] # TEST: Production
 # GROUP_ID_VEC = 12005 # first(GROUP_ID_VEC)::Int # TEST: pour les tests
-# GROUP_ID_VEC = 11920 # first(GROUP_ID_VEC)::Int # TEST: pour les tests
+GROUP_ID_VEC = 11920 # first(GROUP_ID_VEC)::Int # TEST: pour les tests
 const TAIL = ENTRIES[54:131]::Vector{Date}
 
 # Functions
@@ -50,12 +50,11 @@ function get_these_mondays(
 end
 
 function try_these_mondays(
-		group_id::Int,
 		next_or_previous::Int;
 		ENTRIES = ENTRIES,
 		TAIL = TAIL,
 	)::Vector{Date}
-	these_mondays = vcat(ENTRIES[1:next], TAIL) # try_these_weeks, try_these_mondays
+	these_mondays = vcat(ENTRIES[1:next], TAIL)
 end
 
 function get_next_first_interval_iterator(
@@ -72,6 +71,37 @@ function get_previous_first_interval_iterator(
 	(APPROXIMATE_FIRST_STOPS[group_id] - 1):-1:0
 end
 
+function get_pool_from(
+		group_id::Int;
+		DFS = DFS,
+		)::DataFrame
+	deepcopy(DFS[group_id])
+end
+
+function rm_empty_df_in(group::Dict{Date,DataFrame})::Dict{Date,DataFrame}
+	filter!(kv -> nrow(kv[2]) > 0, group)
+end
+
+function push_newline_in!(
+		subgroup::DataFrame;
+		vaccinated = true,
+		entry = this_monday,
+		exit = this_monday + Week(53), # INFO: un peu plus qu'un an, 53 semaines en tout
+		death = row.death_week,
+		DCCI = [(row.DCCI, this_monday)], # INFO: un vecteur d'une paire (tuple)
+		)::Nothing
+	push!(
+				subgroup,
+				(
+				 vaccinated = vaccinated,
+				 entry = entry,
+				 exit = exit,
+				 death = death,
+				 DCCI = DCCI,
+				 ),
+				)
+end
+
 ## High level functions
 function select_subgroups(
 		group_id::Int ;
@@ -82,7 +112,6 @@ function select_subgroups(
 		ALL_MONDAYS = ALL_MONDAYS,
 		DFS = DFS,
 		group = init_group(),
-		# group = group,
 		)::Dict{Date,DataFrame}
 	these_mondays = get_these_mondays(group_id)
 	try
@@ -93,7 +122,7 @@ function select_subgroups(
 		else
 			for next = get_next_first_interval_iterator(group_id)
 				try
-					group = create_subgroups(group_id, try_these_mondays(group_id, next))
+					group = create_subgroups(group_id, try_these_mondays(next))
 				catch
 					@info "group_id = $group_id\nsubgroups selected from below: [1:$next, 54:131]"
 					return group
@@ -104,7 +133,7 @@ function select_subgroups(
 	catch
 		for previous = get_previous_first_interval_iterator(group_id)
 			try
-				group = create_subgroups(group_id, try_these_mondays(group_id, previous))
+				group = create_subgroups(group_id, try_these_mondays(previous))
 				@info "group_id = $group_id\nsubgroups selected from above: [1:$previous, 54:131]"
 				return group
 			catch
@@ -123,7 +152,7 @@ function create_subgroups(
 		group = init_group(),
 		agenda = init_agenda(),
 	)::Dict{Date,DataFrame}
-	pool = deepcopy(DFS[group_id])::DataFrame
+	pool = get_pool_from(group_id)
 	for this_monday in ALL_MONDAYS
 		if this_monday in these_mondays
 			subgroup = group[this_monday]
@@ -147,32 +176,31 @@ function create_subgroups(
 													agenda,
 												 )
 	end
-	filter!(kv -> nrow(kv[2]) > 0, group)
+	rm_empty_df_in(group)
 	return group
 end
 
-function process_vaccinated!(pool::DataFrame, subgroup::DataFrame, this_monday::Date)::Int
-	# INFO: Repérer dans `pool` les vaccinés du `subgroup` en cours, puis les mettre dans group[entry].
+function process_vaccinated!(
+		pool::DataFrame,
+		subgroup::DataFrame,
+		this_monday::Date,
+		)::Int
+	# INFO: Repérer dans `pool` les vaccinés du `subgroup`, puis les ajouter au subgroup.
 	for row in eachrow(pool)
 		if row.dose1_week == this_monday
-			vaccinated = true
-			entry = this_monday
-			exit = this_monday + Week(53) # INFO: un peu plus qu'un an, 53 semaines en tout
-			death = row.death_week
-			DCCI = [(row.DCCI, this_monday)] # INFO: un vecteur d'une paire (tuple)
 			push!(
 						subgroup,
 						(
-						 vaccinated = vaccinated,
-						 entry = entry,
-						 exit = exit,
-						 death = death,
-						 DCCI = DCCI,
-						),
-					 )
+						 vaccinated = true,
+						 entry = this_monday,
+						 exit = this_monday + Week(53), # INFO: un peu plus qu'un an, 53 semaines en tout
+						 death = row.death_week,
+						 DCCI = [(row.DCCI, this_monday)], # INFO: un vecteur d'une seule paire
+						 ),
+						)
 		end
 	end
-	# INFO:renvoie le nombre de vaccinés ajoutés à entry
+	# INFO:renvoie le nombre de vaccinés ajoutés au subgroup
 	return nrow(subgroup)
 end
 
@@ -328,7 +356,7 @@ end
 
 # Processing
 # Variables réinitialisation
-group = Dict(entry => DataFrame( vaccinated = Bool[], entry = Date[], exit = Date[], death = Date[], DCCI = Vector{Tuple{Int,Date}}[],) for entry in ENTRIES); agenda = Dict{Date,Dict{Date,Vector{Int}}}() # TEST:
+# group = Dict(entry => DataFrame( vaccinated = Bool[], entry = Date[], exit = Date[], death = Date[], DCCI = Vector{Tuple{Int,Date}}[],) for entry in ENTRIES); agenda = Dict{Date,Dict{Date,Vector{Int}}}() # TEST:
 exact_selection =
 # ThreadsX.map(GROUP_ID_VEC) do group_id # PRODUCTION
 @time ThreadsX.map(GROUP_ID_VEC) do group_id
@@ -336,7 +364,7 @@ exact_selection =
 end |> Dict
 exact_selection[11920][Date("2020-12-21")][:,:DCCI] # TEST:
 # exact_selection[11920][Date("2020-12-21")] # TEST:
-exact_selection[22005][Date("2022-01-17")] # TEST:
+# exact_selection[22005][Date("2022-01-17")] # TEST:
 
 # exact_selection = nothing
 
