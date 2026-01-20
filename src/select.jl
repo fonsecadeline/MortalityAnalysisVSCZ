@@ -54,6 +54,7 @@ function create_subgroups(
 		agenda = init_agenda(),
 		)::Dict{Date,DataFrame}
 	pool = get_pool_from(group_id)
+	last_period_day = these_mondays.last + 1
 	for this_monday in ALL_MONDAYS
 		if this_monday in these_mondays
 			subgroup = group[this_monday]
@@ -68,6 +69,7 @@ function create_subgroups(
 																	this_monday,
 																	vaccinated_count,
 																	agenda,
+																	last_period_day
 																	)
 		end
 		replace_unvaccinated!(
@@ -111,9 +113,10 @@ function process_first_unvaccinated!(
 		this_monday::Date,
 		vaccinated_count::Int,
 		agenda::Dict{Date,Dict{Date,Vector{Int}}},
+		last_period_day::Date
 		)::Nothing
 	if vaccinated_count != 0
-		eligible = get_eligible(pool, this_monday)
+		eligible = get_eligible(pool, last_period_day)
 		if length(eligible) < vaccinated_count
 			error("$this_monday: fewer unvaccinated than vaccinated individuals. The select_subgroups function will reduce the number of weeks considered in this group.")
 		else
@@ -232,7 +235,7 @@ end
 
 function get_eligible(
 		pool::DataFrame,
-		this_monday::Date,
+		last_period_day::Date,
 		)::Vector{Int}
 	findall( 
 					row ->
@@ -240,7 +243,7 @@ function get_eligible(
 					## les vivants:
 					this_monday <= row.death_week && # INFO: peuvent mourir la semaine courante de this_monday.
 					## non-vaccinés:
-					this_monday < row.dose1_week && # INFO: doivent être non-vaccinés la semaine courante
+					row.dose1_week > last_period_day && # INFO: doivent être non-vaccinés la semaine courante
 					## qui ne sont pas encore dans un autre subgroup:
 					row.availability_week <= this_monday, # INFO: était auparavant `<`. Pourtant, plus bas: `pool[i, :availability_week] = exit + Week(1)`, ce qui signifie ces non-vaccinés sont disponibles un peu plus tôt, à partir de la semaine 54 et non 55. Mais est-ce que cela pose problème pour la toute première semaine, où la vaccination commence le dimanche 27 décembre 2020? En principe, non, car cela fait un décalage de 6 + 1.24 jours seulement. Il faut peut-être éclaircir le code au sujet des décalages des jours, car une année fait 52 semaines + 1.24 jours, et les vaccinations sont réputées commencer en milieu de semaines ou en fin en ce qui concerne la toute première semaine.
 					eachrow(pool),
