@@ -6,7 +6,8 @@ using CSV
 using DataFrames
 using Dates
 using Downloads
-using JLD2 # Backup and restore data in Julia Data Format, version 2
+using DrWatson
+using JLD2 # for backup data
 using Random
 using StatsBase # Sample
 using ThreadsX # Parallel computing

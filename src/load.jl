@@ -12,7 +12,7 @@ const MY_CZECH_HEADER = [
 ]
 
 # Functions
-function load_csv_data(file::AbstractString, select_cols)
+function load_csv_data(file::AbstractString, select_cols)::DataFrame
     return CSV.File(file; select = select_cols) |> DataFrame
 end
 

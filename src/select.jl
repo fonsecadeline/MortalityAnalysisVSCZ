@@ -230,6 +230,17 @@ function all_weeks_are_selected(
 	APPROXIMATE_FIRST_STOPS[group_id] == MAX_FIRST_STOP
 end
 
+# empty_agenda = Dict{Date,Dict{Date,Vector{Int}}}()
+# empty_tasks_list = Dict{Date,Vector{Int}}()
+# empty_tasks = Int[]
+# step = 0
+# @chain begin
+# 	agenda
+# 	get!(_, tasks_list_id, empty_tasks_list)
+# 	get!(_, task_id, empty_task)
+# 	append!(_, step)
+# end
+
 function get_eligible(
 		pool::DataFrame,
 		this_monday::Date,
@@ -280,11 +291,15 @@ function get_these_mondays(
 end
 
 function init_agenda()::Dict{Date,Dict{Date,Vector{Int}}}
-	agenda = Dict{Date,Dict{Date,Vector{Int}}}()
 	# INFO:
-	# la première date représente chaque page de l'agenda,
-	# la deuxième date, l'identifiant de chaque subgroup sur lequel agir,
-	# le vecteur de Int, les lignes de chaque subgroup sur lesquels agir.
+	# step = 0::Int
+	# task = [step]::Vector{Int}
+	# task_id = Date(0, 0, 0)
+	# tasks_list = Dict(task_id => task)
+	# tasks_list_id = Date(0, 0, 0)
+	# agenda = Dict(tasks_list_id => tasks_list)
+	# agenda = Dict(tasks_list_id => Dict(task_id => [step]))
+	agenda = Dict{Date,Dict{Date,Vector{Int}}}()
 end
 
 function init_group()::Dict{Date,DataFrame}

@@ -2,8 +2,9 @@
 root = pwd()
 # INFO: choose your seed just below!
 my_seed = 0
-include(joinpath(root, "src/project.jl"))
+include(joinpath(root, "src/install.jl"))
 include(joinpath(root, "src/packages.jl"))
+include(joinpath(root, "src/project.jl"))
 include(joinpath(root, "src/constants.jl"))
 include(joinpath(root, "src/download.jl"))
 include(joinpath(root, "src/checksum.jl"))

@@ -9,6 +9,7 @@ function DownloadCheck(file::AbstractString, URL::AbstractString)::Nothing
 	if !isfile(file)
 		@info "File missing, downloading... (1.3Go)"
 		Downloads.download(URL, file)
+		@info "Download completed"
 	else
 		@info "File already present"
 	end
@@ -16,5 +17,3 @@ end
 
 # Processing
 DownloadCheck(CZECH_DATA_CSV, CZECH_DATA_CSV_URL)
-
-@info "Download completed"
