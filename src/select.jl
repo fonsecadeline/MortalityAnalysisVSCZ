@@ -63,6 +63,10 @@ function create_subgroups(
 																						 subgroup,
 																						 this_monday,
 																						 )
+
+			# this function edits subgroup
+			# but are we sure group[this_monday] is edited in the exact same way ? 
+			# because in the end what we are returning is group, so we need to ensure it changed
 			process_first_unvaccinated!(
 																	pool,
 																	subgroup,
@@ -71,6 +75,7 @@ function create_subgroups(
 																	agenda,
 																	last_period_day
 																	)
+			# same coment here 
 		end
 		replace_unvaccinated!(
 													this_monday,
