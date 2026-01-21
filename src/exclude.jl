@@ -1,19 +1,18 @@
 @info "Filtering data"
 
 # Functions
-function is_valid_df(df::DataFrame)
+function is_valid_df(df::DataFrame)::Bool
     first_row = df[1, :]
     !ismissing(first_row._5_years_cat_of_birth) &&
         1920 <= first_row._5_years_cat_of_birth < 2020 &&
         !ismissing(first_row.sex)
 end
 
-function modify_df!(df::DataFrame)
-    cutoff = Date("2020-12-21") # TODO: remplacer par une variable
+function modify_df!(df::DataFrame)::DataFrame
     filter!(
         row ->
             (ismissing(row.infection_rank) || row.infection_rank == 1) &&
-            (ismissing(row.death_week) || row.death_week > cutoff), # Décédé strictement avant la semaine de vaccination.
+            (ismissing(row.death_week) || row.death_week > CAMPAING_FIRST_WEEK), # Décédé strictement avant la semaine de vaccination.
         df,
     )
     select!(df, Not(:infection_rank))

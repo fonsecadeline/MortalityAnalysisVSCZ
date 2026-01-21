@@ -3,8 +3,8 @@
 const CZECH_DATA_CSV = "data/exp_raw/Otevrena-data-NR-26-30-COVID-19-prehled-populace-2024-01.csv"
 const AVAILABLE = Date(-10000, 01, 01)
 const UNAVAILABLE = Date(10000, 01, 01)
-const VERY_FIRST_ENTRY = Date(2020, 12, 21)
-const FIRST_LAST_WEEK = VERY_FIRST_ENTRY + Week(53)
+const CAMPAING_FIRST_WEEK = Date(2020, 12, 21)
+const FIRST_LAST_WEEK = CAMPAING_FIRST_WEEK + Week(53)
 const UNVACCINATED = Date(10000, 01, 01)
 const STILL_ALIVE = Date(10000, 01, 01)
 const FIRST_MONDAY = Date(2020, 12, 21)

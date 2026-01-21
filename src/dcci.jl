@@ -1,14 +1,14 @@
 @info "dcci treatment"
 
 # Functions
-function dcci_treatment!(df::DataFrame)
+function dcci_treatment!(df::DataFrame)::DataFrame
     newcol = Vector{Vector{Tuple{Int,Int}}}(undef, nrow(df))
     @inbounds for i = 1:nrow(df)
         old = df.DCCI[i]
         n = length(old)
         # accumulation par code : 0..5 → indices 1..6
         durations = zeros(Int, 6)
-        first_is_special = (old[1][2] == VERY_FIRST_ENTRY)
+        first_is_special = (old[1][2] == CAMPAING_FIRST_WEEK)
         for j = 1:n
             (code, date) = old[j]
             adjustment = (j == 1 && first_is_special) ? Day(6) : Day(3)

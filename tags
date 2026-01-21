@@ -11,7 +11,6 @@
 !_TAG_PROGRAM_VERSION	5.9.0	//
 ALL_MONDAYS	src/constants.jl	/^const ALL_MONDAYS = collect(FIRST_MONDAY:Week(1):LAST_MONDAY)$/;"	c
 APPROXIMATE_FIRST_STOPS	src/select.jl	/^const APPROXIMATE_FIRST_STOPS = approximate_selection::Dict{Int,Int}$/;"	c
-APPROXIMATE_SELECTION	test/select_test.jl	/^const APPROXIMATE_SELECTION = approximate_selection::Dict{Int,Int}$/;"	c
 AVAILABLE	src/constants.jl	/^const AVAILABLE = Date(-10000, 01, 01)$/;"	c
 CZECH_DATA_CSV	src/constants.jl	/^const CZECH_DATA_CSV = "data\/exp_raw\/Otevrena-data-NR-26-30-COVID-19-prehled-populace-2024-01./;"	c
 CZECH_DATA_CSV_B3SUM	src/checksum.jl	/^const CZECH_DATA_CSV_B3SUM = "28a58ec2c8360cdf4ae599cc59bd6e8c678aa7ccbab7debc5d3c3faf645dfcd6"$/;"	c
@@ -19,19 +18,16 @@ CZECH_DATA_CSV_QUOTE	test/other_constants.jl	/^const CZECH_DATA_CSV_QUOTE = "Ša
 CZECH_DATA_CSV_URL	src/download.jl	/^const CZECH_DATA_CSV_URL = "https:\/\/data.mzcr.cz\/data\/distribuce\/402\/Otevrena-data-NR-26-3/;"	c
 CZECH_HEADER	test/other_constants.jl	/^const CZECH_HEADER = [$/;"	c
 DFS	src/select.jl	/^const DFS = dfs::Dict{Int, DataFrame}$/;"	c
-DFS	test/select_test.jl	/^const DFS = dfs::Dict{Int, DataFrame}$/;"	c
-DownloadCheck	src/download.jl	/^function DownloadCheck(file::AbstractString, URL::AbstractString)$/;"	f
+DownloadCheck	src/download.jl	/^function DownloadCheck(file::AbstractString, URL::AbstractString)::Nothing$/;"	f
 ENGLISH_HEADER	test/other_constants.jl	/^const ENGLISH_HEADER = [$/;"	c
 ENTRIES	src/constants.jl	/^const ENTRIES = first(ALL_MONDAYS, length(ALL_MONDAYS)-53)$/;"	c
 EVA	src/indexing.jl	/^const EVA = Date("10000-01-01")$/;"	c
 FIRST_LAST_WEEK	src/constants.jl	/^const FIRST_LAST_WEEK = VERY_FIRST_ENTRY + Week(53)$/;"	c
 FIRST_LAST_WEEK_ADJUSTMENT	src/processing.jl	/^const FIRST_LAST_WEEK_ADJUSTMENT = (7.24+14\/24)\/7$/;"	c
 FIRST_MONDAY	src/constants.jl	/^const FIRST_MONDAY = Date(2020, 12, 21)$/;"	c
-GROUP_ID_VEC	test/select_test.jl	/^const GROUP_ID_VEC = 11920 # first(GROUP_ID_VEC)::Int # INFO: pour les tests$/;"	c
-HashCheck	src/checksum.jl	/^function HashCheck(file::AbstractString, b3sum::AbstractString)$/;"	f
+HashCheck	src/checksum.jl	/^function HashCheck(file::AbstractString, b3sum::AbstractString)::Nothing$/;"	f
 LAST_MONDAY	src/constants.jl	/^const LAST_MONDAY = Date(2024, 06, 24)$/;"	c
 MAX_FIRST_STOP	src/select.jl	/^const MAX_FIRST_STOP = 53$/;"	c
-MAX_FIRST_WEEKS_NB	test/select_test.jl	/^const MAX_FIRST_WEEKS_NB = 53::Int$/;"	c
 MISSING	src/indexing.jl	/^const MISSING = Date("10000-01-01")$/;"	c
 MY_CZECH_HEADER	src/load.jl	/^const MY_CZECH_HEADER = [$/;"	c
 MY_ENGLISH_HEADER	src/header.jl	/^const MY_ENGLISH_HEADER = [$/;"	c
@@ -39,44 +35,35 @@ OTHER_FIRST_WEEK_ADJUSTMENT	src/processing.jl	/^const OTHER_FIRST_WEEK_ADJUSTMEN
 OTHER_LAST_WEEK_ADJUSTMENT	src/processing.jl	/^const OTHER_LAST_WEEK_ADJUSTMENT = 4.24\/7$/;"	c
 STILL_ALIVE	src/constants.jl	/^const STILL_ALIVE = Date(10000, 01, 01)$/;"	c
 TAIL	src/select.jl	/^const TAIL = ENTRIES[54:131]::Vector{Date}$/;"	c
-TAIL	test/select_test.jl	/^const TAIL = ENTRIES[54:131]::Vector{Date}$/;"	c
 UNAVAILABLE	src/constants.jl	/^const UNAVAILABLE = Date(10000, 01, 01)$/;"	c
 UNVACCINATED	src/constants.jl	/^const UNVACCINATED = Date(10000, 01, 01)$/;"	c
 VERY_FIRST_ENTRY	src/constants.jl	/^const VERY_FIRST_ENTRY = Date(2020, 12, 21)$/;"	c
 VERY_FIRST_WEEK_ADJUSTMENT	src/processing.jl	/^const VERY_FIRST_WEEK_ADJUSTMENT = (10\/24)\/7$/;"	c
-Week	test/main_test.jl	/^const Week = Date$/;"	c
 YEAR_WEEK	src/constants.jl	/^const YEAR_WEEK = ["dose1_week", "death_week"]$/;"	c
 YEAR_YEAR	src/constants.jl	/^const YEAR_YEAR = ["_5_years_cat_of_birth"]$/;"	c
 all_weeks_are_selected	src/select.jl	/^function all_weeks_are_selected($/;"	f
-all_weeks_are_selected	test/select_test.jl	/^function all_weeks_are_selected($/;"	f
-compute_week_deaths	test/main_test.jl	/^function compute_week_deaths(df)$/;"	f
-convert_to_uint8!	src/format.jl	/^function convert_to_uint8!(df::DataFrame, col::Symbol)$/;"	f
+convert_to_uint8!	src/format.jl	/^function convert_to_uint8!(df::DataFrame, col::Symbol)::DataFrame$/;"	f
 create_subgroups	src/select.jl	/^function create_subgroups($/;"	f
-create_subgroups	test/select_test.jl	/^function create_subgroups($/;"	f
 dcci_treatment!	src/dcci.jl	/^function dcci_treatment!(df::DataFrame)$/;"	f
-drop_unused_columns!	src/columns.jl	/^function drop_unused_columns!(df::DataFrame)$/;"	f
 find_last_valid	src/approximate_selection.jl	/^function find_last_valid(ENTRIES, subgroup_id; maxk = 53)$/;"	f
-first_monday_of_ISOyear	src/format.jl	/^function first_monday_of_ISOyear(year::Int)$/;"	f
+first_monday_of_ISOyear	src/format.jl	/^function first_monday_of_ISOyear(year::Int)::Date$/;"	f
+get_eligible	src/select.jl	/^function get_eligible($/;"	f
 get_next_first_interval_iterator	src/select.jl	/^function get_next_first_interval_iterator($/;"	f
 get_pool_from	src/select.jl	/^function get_pool_from($/;"	f
 get_previous_first_interval_iterator	src/select.jl	/^function get_previous_first_interval_iterator($/;"	f
 get_these_mondays	src/select.jl	/^function get_these_mondays($/;"	f
 init_agenda	src/select.jl	/^function init_agenda()::Dict{Date,Dict{Date,Vector{Int}}}$/;"	f
-init_group	src/select.jl	/^function init_group(ENTRIES = ENTRIES)::Dict{Date,DataFrame}$/;"	f
-is_valid_df	src/exclude.jl	/^function is_valid_df(df::DataFrame)$/;"	f
-isoweek_to_date!	src/format.jl	/^function isoweek_to_date!(df::DataFrame, col::Symbol)$/;"	f
-load_csv_data	src/load.jl	/^function load_csv_data(file::AbstractString, select_cols)$/;"	f
-modify_df!	src/exclude.jl	/^function modify_df!(df::DataFrame)$/;"	f
-parse_year_column!	src/format.jl	/^function parse_year_column!(df::DataFrame, col::Symbol) # encoder avec UInt8 est possible mais m/;"	f
+init_group	src/select.jl	/^function init_group()::Dict{Date,DataFrame}$/;"	f
+is_valid_df	src/exclude.jl	/^function is_valid_df(df::DataFrame)::Bool$/;"	f
+isoweek_to_date!	src/format.jl	/^function isoweek_to_date!(df::DataFrame, col::Symbol)::DataFrame$/;"	f
+load_csv_data	src/load.jl	/^function load_csv_data(file::AbstractString, select_cols)::DataFrame$/;"	f
+modify_df!	src/exclude.jl	/^function modify_df!(df::DataFrame)::DataFrame$/;"	f
+parse_year_column!	src/format.jl	/^function parse_year_column!(df::DataFrame, col::Symbol)::DataFrame # encoder avec UInt8 est poss/;"	f
 process_first_unvaccinated!	src/select.jl	/^function process_first_unvaccinated!($/;"	f
-process_first_unvaccinated!	test/select_test.jl	/^function process_first_unvaccinated!($/;"	f
 process_vaccinated!	src/select.jl	/^function process_vaccinated!($/;"	f
-process_vaccinated!	test/select_test.jl	/^function process_vaccinated!(pool::DataFrame, subgroup::DataFrame, this_monday::Date)::Int$/;"	f
 processing	src/processing.jl	/^function processing(df::DataFrame)$/;"	f
-push_newline_in!	src/select.jl	/^function push_newline_in!($/;"	f
 replace_unvaccinated!	src/select.jl	/^function replace_unvaccinated!($/;"	f
-replace_unvaccinated!	test/select_test.jl	/^function replace_unvaccinated!($/;"	f
-rm_empty_df_from	src/select.jl	/^function rm_empty_df_from(group::Dict{Date,DataFrame})::Dict{Date,DataFrame}$/;"	f
+rm_empty_df_in	src/select.jl	/^function rm_empty_df_in(group::Dict{Date,DataFrame})::Dict{Date,DataFrame}$/;"	f
 select_subgroups	src/select.jl	/^function select_subgroups($/;"	f
-select_subgroups	test/select_test.jl	/^function select_subgroups($/;"	f
 try_these_mondays	src/select.jl	/^function try_these_mondays($/;"	f
+write_agenda!	src/select.jl	/^function write_agenda!($/;"	f

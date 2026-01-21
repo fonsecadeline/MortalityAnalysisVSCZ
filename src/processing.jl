@@ -35,15 +35,15 @@ function processing(df::DataFrame)
             (dcci, days) = r.DCCI[1]
             vaccinated_accumulator[dcci+1] += days
             vaccinated_individuals[dcci+1] += 1
-            if r.death == VERY_FIRST_ENTRY
+            if r.death == CAMPAING_FIRST_WEEK
                 vaccinated_very_first_week_deaths[dcci+1] += 1
             elseif r.death == r.entry # INFO: other_first_week
                 vaccinated_other_first_week_deaths[dcci+1] += 1
             elseif r.entry < r.death < r.exit
                 vaccinated_other_week_deaths[dcci+1] += 1
-            elseif r.entry == VERY_FIRST_ENTRY && r.death == FIRST_LAST_WEEK
+            elseif r.entry == CAMPAING_FIRST_WEEK && r.death == FIRST_LAST_WEEK
                 vaccinated_first_last_week_deaths[dcci+1] += 1
-            elseif r.death == VERY_FIRST_ENTRY + Week(53)
+            elseif r.death == CAMPAING_FIRST_WEEK + Week(53)
                 vaccinated_other_last_week_deaths[dcci+1] += 1
             end
         else
@@ -52,15 +52,15 @@ function processing(df::DataFrame)
                 unvaccinated_total_days += days
             end
             unvaccinated_individuals += 1
-            if r.death == VERY_FIRST_ENTRY
+            if r.death == CAMPAING_FIRST_WEEK
                 unvaccinated_very_first_week_deaths += 1
             elseif r.death == r.entry # INFO: other_first_week
                 unvaccinated_other_first_week_deaths += 1
             elseif r.entry < r.death < r.exit
                 unvaccinated_other_week_deaths += 1
-            elseif r.entry == VERY_FIRST_ENTRY && r.death == FIRST_LAST_WEEK
+            elseif r.entry == CAMPAING_FIRST_WEEK && r.death == FIRST_LAST_WEEK
                 unvaccinated_first_last_week_deaths += 1
-            elseif r.death == VERY_FIRST_ENTRY + Week(53)
+            elseif r.death == CAMPAING_FIRST_WEEK + Week(53)
                 unvaccinated_other_last_week_deaths += 1
             end
         end

@@ -1,18 +1,18 @@
 @info "Formatting data"
 
 # Functions
-function convert_to_uint8!(df::DataFrame, col::Symbol)
+function convert_to_uint8!(df::DataFrame, col::Symbol)::DataFrame
     df[!, col] = convert(Vector{Union{Missing,UInt8}}, df[!, col])
     return df
 end
 
-function first_monday_of_ISOyear(year::Int)
+function first_monday_of_ISOyear(year::Int)::Date
     jan4 = Date(year, 1, 4)  # Le 4 janvier est toujours dans la semaine 1 ISO
     monday = firstdayofweek(jan4)  # Premier lundi de la semaine contenant le 4 janvier
     return monday
 end
 
-function parse_year_column!(df::DataFrame, col::Symbol) # encoder avec UInt8 est possible mais moins lisible.
+function parse_year_column!(df::DataFrame, col::Symbol)::DataFrame # encoder avec UInt8 est possible mais moins lisible.
     df[!, col] = map(
         x -> length(String(x)) == 1 ? missing : UInt16(parse(Int, first(String(x), 4))),
         df[!, col],
@@ -20,7 +20,7 @@ function parse_year_column!(df::DataFrame, col::Symbol) # encoder avec UInt8 est
     return df
 end
 
-function isoweek_to_date!(df::DataFrame, col::Symbol)
+function isoweek_to_date!(df::DataFrame, col::Symbol)::DataFrame
     df[!, col] = map(
         x ->
             ismissing(x) ? missing : begin
@@ -33,12 +33,12 @@ function isoweek_to_date!(df::DataFrame, col::Symbol)
 end
 
 # Processing
-ThreadsX.foreach(subdf -> begin
-    convert_to_uint8!(subdf, :sex)
-    convert_to_uint8!(subdf, :infection_rank)
-    parse_year_column!(subdf, :_5_years_cat_of_birth)
-    isoweek_to_date!(subdf, :dose1_week)
-    isoweek_to_date!(subdf, :death_week)
+ThreadsX.foreach(df -> begin
+    convert_to_uint8!(df, :sex)
+    convert_to_uint8!(df, :infection_rank)
+    parse_year_column!(df, :_5_years_cat_of_birth)
+    isoweek_to_date!(df, :dose1_week)
+    isoweek_to_date!(df, :death_week)
 end, dfs)
 
 @info "Formatting completed"
