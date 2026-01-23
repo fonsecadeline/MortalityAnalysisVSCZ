@@ -12,6 +12,7 @@
 ALL_MONDAYS	src/constants.jl	/^const ALL_MONDAYS = collect(FIRST_MONDAY:Week(1):LAST_MONDAY)$/;"	c
 APPROXIMATE_FIRST_STOPS	src/select.jl	/^const APPROXIMATE_FIRST_STOPS = approximate_selection::Dict{Int,Int}$/;"	c
 AVAILABLE	src/constants.jl	/^const AVAILABLE = Date(-10000, 01, 01)$/;"	c
+CAMPAING_FIRST_WEEK	src/constants.jl	/^const CAMPAING_FIRST_WEEK = Date(2020, 12, 21)$/;"	c
 CZECH_DATA_CSV	src/constants.jl	/^const CZECH_DATA_CSV = "data\/exp_raw\/Otevrena-data-NR-26-30-COVID-19-prehled-populace-2024-01./;"	c
 CZECH_DATA_CSV_B3SUM	src/checksum.jl	/^const CZECH_DATA_CSV_B3SUM = "28a58ec2c8360cdf4ae599cc59bd6e8c678aa7ccbab7debc5d3c3faf645dfcd6"$/;"	c
 CZECH_DATA_CSV_QUOTE	test/other_constants.jl	/^const CZECH_DATA_CSV_QUOTE = "Šanca O., Jarkovský J., Klimeš D., Zelinková H., Klika P., Ben/;"	c
@@ -22,9 +23,10 @@ DownloadCheck	src/download.jl	/^function DownloadCheck(file::AbstractString, URL
 ENGLISH_HEADER	test/other_constants.jl	/^const ENGLISH_HEADER = [$/;"	c
 ENTRIES	src/constants.jl	/^const ENTRIES = first(ALL_MONDAYS, length(ALL_MONDAYS)-53)$/;"	c
 EVA	src/indexing.jl	/^const EVA = Date("10000-01-01")$/;"	c
-FIRST_LAST_WEEK	src/constants.jl	/^const FIRST_LAST_WEEK = VERY_FIRST_ENTRY + Week(53)$/;"	c
+FIRST_LAST_WEEK	src/constants.jl	/^const FIRST_LAST_WEEK = CAMPAING_FIRST_WEEK + Week(53)$/;"	c
 FIRST_LAST_WEEK_ADJUSTMENT	src/processing.jl	/^const FIRST_LAST_WEEK_ADJUSTMENT = (7.24+14\/24)\/7$/;"	c
 FIRST_MONDAY	src/constants.jl	/^const FIRST_MONDAY = Date(2020, 12, 21)$/;"	c
+GROUP_ID_VEC	src/select.jl	/^const GROUP_ID_VEC = [11920] # first(GROUP_ID_VEC)::Int[] # TEST:$/;"	c
 HashCheck	src/checksum.jl	/^function HashCheck(file::AbstractString, b3sum::AbstractString)::Nothing$/;"	f
 LAST_MONDAY	src/constants.jl	/^const LAST_MONDAY = Date(2024, 06, 24)$/;"	c
 MAX_FIRST_STOP	src/select.jl	/^const MAX_FIRST_STOP = 53$/;"	c
@@ -37,16 +39,16 @@ STILL_ALIVE	src/constants.jl	/^const STILL_ALIVE = Date(10000, 01, 01)$/;"	c
 TAIL	src/select.jl	/^const TAIL = ENTRIES[54:131]::Vector{Date}$/;"	c
 UNAVAILABLE	src/constants.jl	/^const UNAVAILABLE = Date(10000, 01, 01)$/;"	c
 UNVACCINATED	src/constants.jl	/^const UNVACCINATED = Date(10000, 01, 01)$/;"	c
-VERY_FIRST_ENTRY	src/constants.jl	/^const VERY_FIRST_ENTRY = Date(2020, 12, 21)$/;"	c
 VERY_FIRST_WEEK_ADJUSTMENT	src/processing.jl	/^const VERY_FIRST_WEEK_ADJUSTMENT = (10\/24)\/7$/;"	c
 YEAR_WEEK	src/constants.jl	/^const YEAR_WEEK = ["dose1_week", "death_week"]$/;"	c
 YEAR_YEAR	src/constants.jl	/^const YEAR_YEAR = ["_5_years_cat_of_birth"]$/;"	c
 all_weeks_are_selected	src/select.jl	/^function all_weeks_are_selected($/;"	f
 convert_to_uint8!	src/format.jl	/^function convert_to_uint8!(df::DataFrame, col::Symbol)::DataFrame$/;"	f
 create_subgroups	src/select.jl	/^function create_subgroups($/;"	f
-dcci_treatment!	src/dcci.jl	/^function dcci_treatment!(df::DataFrame)$/;"	f
+dcci_treatment!	src/dcci.jl	/^function dcci_treatment!(df::DataFrame)::DataFrame$/;"	f
 find_last_valid	src/approximate_selection.jl	/^function find_last_valid(ENTRIES, subgroup_id; maxk = 53)$/;"	f
 first_monday_of_ISOyear	src/format.jl	/^function first_monday_of_ISOyear(year::Int)::Date$/;"	f
+get_agenda_iterator	src/select.jl	/^function get_agenda_iterator(subgroup::DataFrame, this_monday::Date)$/;"	f
 get_eligible	src/select.jl	/^function get_eligible($/;"	f
 get_next_first_interval_iterator	src/select.jl	/^function get_next_first_interval_iterator($/;"	f
 get_pool_from	src/select.jl	/^function get_pool_from($/;"	f

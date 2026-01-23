@@ -9,7 +9,7 @@ const DFS = dfs::Dict{Int, DataFrame}
 const MAX_FIRST_STOP = 53
 const TAIL = ENTRIES[54:131]::Vector{Date}
 # const GROUP_ID_VEC = @chain DFS keys collect # sort # Int[] # INFO: Production
-const GROUP_ID_VEC = [11920] # first(GROUP_ID_VEC)::Int # TEST:
+const GROUP_ID_VEC = [11920] # first(GROUP_ID_VEC)::Int[] # TEST:
 
 # Functions
 ## High level functions, sorted in hierarchical order
@@ -140,19 +140,7 @@ function process_first_unvaccinated!(
 			end
 		end
 	end
-	# INFO: Il faut ensuite noter dans l'agenda `agenda` les non-vaccinés qui devront être remplacés, et quand.
-	# Itérateur sur les non-vaccinés à remplacer (when, what, where)
-	# INFO: cet itérateur sélectionne le numéro de ligne, `this_monday` et `exit` de chaque non-vacciné à remplacer dans subroup, mais les réarange dans un autre sens: d'abord la date `exit` (car c'est à ce moment-là qu'il faudra le remplacer), puis `this_monday` (car c'est aussi l'identifiant du subgroup dans lequel le remplacement devra être fait) et le numéro de ligne (car c'est la ligne du non-vacciné à remplacer).
-	when_what_where_iter = ( # TODO: Changer le nom pour filer la métaphore de l'agenda. step_by_step ? Faire construire l'itérateur par une fonction.
-													(
-													 row.exit, # Semaine de vaccination du non-vacciné: quand il faut s'occuper du remplacement
-													 this_monday, # Identifiant (une date) du subgroup: dans quel subgroup a lieu le remplacement
-													 i, # à quelle ligne
-													) for (i, row) in enumerate(eachrow(subgroup))
-													# INFO: On ne retient que les individus dont la durée (exit - entry) est strictement inférieure à 53 semaines, c’est-à-dire ceux qui se vaccinent avant la fin de la période d’observation. NOTA: cela exclut automatiqument les vaccinés, car dans leur cas, strictement: `(row.exit - row.entry) == Week(53)`
-													if (row.exit - row.entry) < Week(53)
-													)
-	for (page_id, task_id, step) in when_what_where_iter
+	for (page_id, task_id, step) in get_agenda_iterator(subgroup, this_monday)
 		write_agenda!(agenda, page_id, task_id, step)
 	end
 	return nothing
@@ -183,7 +171,7 @@ function replace_unvaccinated!(
 				for (k, step) in enumerate(task) # INFO: `step` have each `task` value, and `k` is the range of `step` [1, 2, 3...].
 					s = selected[k] # l'indice d'un individu de remplacement dans pool
 					subgroup_end = task_id + Week(53)
-					page_id = pool[s, :dose1_week] # sa date de vaccination (le cas échéant Date(1000,01,01), ce qui représente la non-vaccination)
+					page_id = pool[s, :dose1_week] # sa date de vaccination (le cas échéant Date(10000,01,01), ce qui représente la non-vaccination)
 					exit = min(subgroup_end, page_id)
 					death = pool[s, :death_week] # sa date de décès
 					subgroup.exit[step] = exit # mettre la donnée dans subgroup
@@ -223,6 +211,17 @@ function get_eligible(
 					)
 end
 
+function get_agenda_iterator(subgroup::DataFrame, this_monday::Date)
+	# INFO: Il faut ensuite noter dans l'agenda les non-vaccinés qui devront être remplacés, quand et dans quel subgroup.
+	# Itérateur sur les non-vaccinés à remplacer (page_id, task_id, step)
+	# INFO: cet itérateur sélectionne le numéro de ligne, `this_monday` et `exit` de chaque non-vacciné à remplacer dans subroup, mais les réarange dans un autre sens: d'abord la date `exit` (car c'est à ce moment-là qu'il faudra le remplacer), puis `this_monday` (car c'est aussi l'identifiant du subgroup dans lequel le remplacement devra être fait) et le numéro de ligne (car c'est la ligne du non-vacciné à remplacer).
+    (
+        (row.exit, this_monday, step)
+        for (step, row) in enumerate(eachrow(subgroup))
+        if (row.exit - row.entry) < Week(53)
+    )
+end
+
 function get_next_first_interval_iterator(
 		group_id::Int
 		)::UnitRange{Int}
@@ -239,13 +238,6 @@ function get_previous_first_interval_iterator(
 		group_id::Int
 		)::StepRange{Int,Int}
 	(APPROXIMATE_FIRST_STOPS[group_id] - 1):-1:0
-end
-
-function get_these_mondays(
-		group_id::Int
-		)::Vector{Date}
-	head = ENTRIES[1:APPROXIMATE_FIRST_STOPS[group_id]]
-	these_mondays = vcat(head, TAIL)
 end
 
 function get_these_mondays(
