@@ -2,19 +2,13 @@ name = "MortalityAnalysisVSCZ"
 authors = ["sulivanShu"]
 
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Blake3Hash = "8f478455-a32d-4928-b0e4-72b19a7d5574"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
-LanguageServer = "2b0e0bc5-e4fd-59b4-8912-456d1b03d8d7"
-PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-StaticLint = "b3cc710f-9c33-5bdb-a03d-a94903873e97"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-SymbolServer = "cf896787-08d5-524d-9de7-132aaa0cb996"
 ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [compat]
