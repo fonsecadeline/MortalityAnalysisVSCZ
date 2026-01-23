@@ -273,6 +273,6 @@ for (k, df) in processed
     )
 end
 
-println(sort!(result, :key))
+sort!(result, :key)
 
 @info "mortality computing completed"
