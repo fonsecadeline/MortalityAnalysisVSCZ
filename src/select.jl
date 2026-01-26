@@ -54,27 +54,25 @@ function create_subgroups(
 		agenda = init_agenda(),
 		)::Dict{Date,DataFrame}
 	pool = get_pool_from(group_id)
-	for this_monday in ALL_MONDAYS
-		if this_monday in these_mondays
-			subgroup = group[this_monday]
-			vaccinated_count = process_vaccinated!(
-																						 pool,
-																						 subgroup,
-																						 this_monday,
-																						 )
+	for this_monday in these_mondays
+		subgroup = group[this_monday]
+		vaccinated_count = process_vaccinated!(
+																					 pool,
+																					 subgroup,
+																					 this_monday,
+																					 )
 
-			# this function edits subgroup
-			# but are we sure group[this_monday] is edited in the exact same way ? 
-			# because in the end what we are returning is group, so we need to ensure it changed
-			process_first_unvaccinated!(
-																	pool,
-																	subgroup,
-																	this_monday,
-																	vaccinated_count,
-																	agenda,
-																	)
-			# same coment here 
-		end
+		# this function edits subgroup
+		# but are we sure group[this_monday] is edited in the exact same way ? 
+		# because in the end what we are returning is group, so we need to ensure it changed
+		process_first_unvaccinated!(
+																pool,
+																subgroup,
+																this_monday,
+																vaccinated_count,
+																agenda,
+																)
+		# same coment here 
 		replace_unvaccinated!(
 													this_monday,
 													pool,
