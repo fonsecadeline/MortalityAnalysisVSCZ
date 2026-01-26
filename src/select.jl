@@ -24,6 +24,10 @@ function select_subgroups(
 			@info "group_id = $group_id\nsubgroups total selection: [1:131]"
 			return group
 		else
+			# are you sure this else case is needed ? 
+			# I feel the only way to get here would be that we got an error when callin create_sbugroups
+			# since we have a catch, I guess we never arrive here ?
+
 			for next = get_next_first_interval_iterator(group_id)
 				try
 					group = create_subgroups(group_id, try_these_mondays(next))
